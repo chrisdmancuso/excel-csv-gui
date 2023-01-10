@@ -13,36 +13,38 @@ def find_delimiter(filename):
 def is_valid_path(filepath):
     if filepath and Path(filepath).exists():
         return True
-    sg.popup_error("No file/folder selected!")
+    sg.popup("No file/folder selected!", title="Error", button_justification="center", button_color="red")
     return False
 
 def display_file(file_path, sheet_name):
-    if file_path[len(file_path) - 4:] == "xlsx":
-        df = pd.read_excel(file_path, sheet_name)
-    else:
-        df = pd.read_csv(file_path, index_col=False)
-    filename = Path(file_path).name
-    sg.popup_scrolled(df.dtypes, "=" * 50, df, title=filename)
+    try:
+        if Path(file_path).suffix == ".xlsx":
+            df = pd.read_excel(file_path, sheet_name)
+        else:
+            df = pd.read_csv(file_path, index_col=False)
+        filename = Path(file_path).name
+        sg.popup_scrolled(df.dtypes, "=" * 50, df, title=filename)
+    except:
+        sg.popup("Error parsing file. Check file delimiters", title="Error", button_justification="center", button_color="red")
 
 def file_exists(file_folder, file_path):
     return Path(f'{file_folder}\{file_path}').is_file()
 
 # ------- Replace File ------- #
-def replace_file(file_path):
+def replace_file(file_path, file_type):
     result = True
     layout = [
         [sg.HSep()],
-        [sg.Text(f"{file_path} already exists. Replace?")],
-        [sg.OK(), sg.Cancel()]
+        [sg.Text(f"{Path(file_path)}{file_type} already exists. Replace?")],
+        [sg.Button("Yes", key="-YES-", s=14, expand_x=True, button_color="tomato"), sg.Button("Cancel", key="-CANCEL-", s=14, expand_x=True)]
         ]
     window = sg.Window("Replace", layout, modal=True, use_custom_titlebar=True)
     while True:
         event, values = window.read()
-        if event == sg.WINDOW_CLOSED or event == "Cancel":
+        if event == sg.WINDOW_CLOSED or event == "-CANCEL-":
             result = False
             break
-        if event == "OK":
-            result = True
+        if event == "-YES-":
             break
     window.close()
     return result
@@ -54,21 +56,21 @@ def convert_file(file_path, output_folder, sheet_name, separator, decimal, filet
         filename = Path(file_path).stem
     if filetype == 'xlsx':
         if file_exists(output_folder, filename + '.csv'):
-            result = replace_file(filename)
+            result = replace_file(filename, '.csv')
         if result == True:
             df = pd.read_excel(file_path, sheet_name)
             outputfile = Path(output_folder) / f"{filename}.csv"
             df.to_csv(outputfile, sep=separator, decimal=decimal, index=False)
     if filetype == '.csv':
         if file_exists(output_folder, filename + '.xlsx'):
-            result = replace_file(filename)
+            result = replace_file(filename, '.xlsx')
         if result == True:
             delimiter = find_delimiter(file_path)
             df = pd.read_csv(file_path, sep=delimiter, index_col=0)
             outputfile = Path(output_folder) / f"{filename}.xlsx"
             df.to_excel(outputfile)
     if result: 
-        sg.popup("Successfully Converted File!")
+        sg.popup("Successfully Converted File!", button_justification="center", title="Success!")
 
 # ------- Change Theme ------- #   
 def change_theme(settings):
@@ -89,10 +91,10 @@ def change_theme(settings):
         if event == "OK":
             if len(values["-THEME-"]) != 0:
                 GUI["theme"] = values["-THEME-"]
-                sg.popup("Theme Changed! Restart required to take effect.")
+                sg.popup("Theme Changed! Restart required to take effect.", button_justification="center", title="Success!", modal=True)
                 break
             else:
-                sg.popup_error("Please make a selection.")
+                sg.popup("Please make a selection.", button_justification="center", button_color="red", title="Error", modal=True)
     window.close()
         
 # ------- Exit Program ------- #
@@ -102,7 +104,8 @@ def exit_program():
     layout = [
         [sg.HSep()],
         [sg.Text("Exit Program?")],
-        [sg.Button("Yes", key="-YES-", s=16, button_color="tomato"), sg.Button("No", key="-NO-", s=16)]
+        [sg.Button("Yes", key="-YES-", s=16, button_color="tomato"), sg.Button("No", key="-NO-", s=16)],
+        [sg.HSep()],
         ]
     window = sg.Window("Exit", layout, modal=True, use_custom_titlebar=True)
     # ------- Event Loop ------- #
@@ -120,15 +123,18 @@ def exit_program():
 # ------- About Page ------- #
 def about_page():
     layout = [
-        [sg.Text(GUI["title"], auto_size_text=True, justification="center")],
         [sg.HSep()],
-        [sg.Text("Source Code: github/chrisdmancuso", font=10, auto_size_text=True, justification="center")],
-        [sg.Text("Authored by Chris Mancuso, 2023", font=8, auto_size_text=True, justification="center")],
-        [sg.Text("Version 1.0 \n Free to use", font=8, auto_size_text=True, justification="center", expand_x=True)],
-        [sg.Button("OK", expand_x=True, key="-OK-")]
+        [sg.Text(GUI["title"], auto_size_text=True, justification="center", expand_x=True)],
+        [sg.HSep()],
+        [sg.Text("Source Code: github/chrisdmancuso", font=10, auto_size_text=True, justification="center", expand_x=True)],
+        [sg.Text("Authored by Chris Mancuso, 2023", font=8, auto_size_text=True, justification="center", expand_x=True)],
+        [sg.Text("Version 1.01", font=8, auto_size_text=True, justification="center", expand_x=True)],
+        [sg.Text("Free to use", font=6, auto_size_text=True, justification="center", expand_x=True)],
+        [sg.Button("OK", expand_x=True, key="-OK-")],
+        [sg.HSep()],
         ]
 
-    window = sg.Window("About", layout, modal=True)
+    window = sg.Window("About", layout, use_custom_titlebar=True, modal=True)
     while True:
         event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == "-OK-":
@@ -140,8 +146,9 @@ def reset_defaults():
     layout = [
         [sg.HSep()],
         [sg.Text("Restore Theme/Settings to Default?", auto_size_text=True, expand_x=True, justification="center")],
-        [sg.Button("Yes", key="-YES-", s=16, button_color="tomato"), sg.Button("No", key="-NO-", s=16)]]
-    window = sg.Window("Defaults", layout, modal=True, use_custom_titlebar=True)
+        [sg.Button("Yes", key="-YES-", s=16, button_color="tomato"), sg.Button("No", key="-NO-", s=16)],
+        [sg.HSep()],]
+    window = sg.Window("Reset", layout, modal=True, use_custom_titlebar=True)
     # ------- Event Loop ------- #
     while True:
         event, values = window.read()
@@ -151,7 +158,7 @@ def reset_defaults():
             CSV["decimal_default"] = "."
             CSV["sheet_name"] = "Sheet1"
             EXCEL["sheet_name"] = "Sheet1"
-            sg.popup("Defaults Restored!")
+            sg.popup("Defaults Restored!", title="Success!", button_justification="center",)
             break
         if event == sg.WINDOW_CLOSED or event == "-NO-":
             break
@@ -163,29 +170,30 @@ def settings_window(settings):
     # ------- GUI Definition ------- #
     layout = [
         [sg.HSep()],
-        [sg.Input(CSV["separator"], s=2, key="-DELIMITER-", justification="center", enable_events=True), sg.Text("Delimiter")],
-        [sg.Combo(CSV["decimal"].split("|"), default_value=CSV["decimal_default"], s=1, key="-DECIMAL-"), sg.Text("Decimal")],
-        [sg.Text("Sheet Name:"), sg.Input(EXCEL["sheet_name"], s=20, key="-SHEET_NAME-")],
-        [sg.Button("Save Current Settings", button_color="tomato", s=20, expand_x=True)]
+        [sg.Text("Decimal:", expand_x=True), sg.Combo(CSV["decimal"].split("|"), default_value=CSV["decimal_default"], s=1, key="-DECIMAL-", readonly=True)],
+        [sg.Text("Delimiter:", expand_x=True), sg.Input(CSV["separator"], s=2, key="-DELIMITER-", justification="center", enable_events=True)],
+        [sg.Text("Sheet Name:"), sg.Input(EXCEL["sheet_name"], s=20, key="-SHEET_NAME-", expand_x=True)],
+        [sg.Button("Save Settings", key="-SAVE-", button_color="tomato", s=16, expand_x=True), sg.Button("Cancel", key="-CANCEL-", s=16, expand_x=True)],
+        [sg.HSep()],
     ]
-    window = sg.Window("Settings Window", layout, modal=True, use_custom_titlebar=True)
+    window = sg.Window("Settings", layout, modal=True, use_custom_titlebar=True)
     # ------- Event Loop ------- #
     while True:
         event, values = window.read()
-        if event == sg.WINDOW_CLOSED:
+        if event == sg.WINDOW_CLOSED or event == "-CANCEL-":
             break
         if event == "-DELIMITER-" and len(values["-DELIMITER-"]) > 1:
             window["-DELIMITER-"].update(values["-DELIMITER-"][:-1])
-        if event == "Save Current Settings":
-            if len(values["-DELIMITER-"]) == 1:    
+        if event == "-SAVE-":
+            if len(values["-DELIMITER-"]) == 1 and len(values["-SHEET_NAME-"]) != 0 and values["-DELIMITER-"].isalnum() == False:    
                 CSV["separator"] = values["-DELIMITER-"]
                 CSV["decimal_default"] = values["-DECIMAL-"]
                 CSV["sheet_name"] = values["-SHEET_NAME-"]
 
-                sg.popup("Settings saved!", modal=True)
+                sg.popup("Settings saved!", button_justification="center", title="Success!", modal=True)
                 break
             else:
-                sg.popup_error("Delimiter value must be 1 character in length")
+                sg.popup("Delimiter/Sheet Name must have a value \n Delimiter cannot be alphanumeric (a-z, 0-9)", title="Error", button_justification="center", button_color="red", modal=True)
     window.close()
 
 # ------- Main Window ------- #
@@ -202,10 +210,10 @@ def main_window():
         [sg.Text("Input File:", s=16, justification="r"), sg.Input(key="-IN-"), sg.FileBrowse(file_types=(("Excel Files", "*.xls*"), ("CSV", "*.csv*")))],
         [sg.Text("Output Folder:", s=16, justification="r"), sg.Input(key="-OUT-"), sg.FolderBrowse()],
         [sg.Text("(Optional) Filename:", s=16, justification="r"), sg.Input(key="-FILE-")],
-        [sg.Exit(s=16, button_color="tomato"), sg.Button("Settings", s=16), sg.Button("Display File", s=16), sg.Button("Convert File", s=16)],
+        [sg.Exit(s=16, button_color="tomato", expand_x=True), sg.Button("Settings", s=16, expand_x=True), sg.Button("Display File", s=16, expand_x=True), sg.Button("Convert File", s=16, expand_x=True)],
     ]
     window_title = GUI["title"]
-    # sg.LOOK_AND_FEEL_TABLE['Reddit']['ACCENT2']
+    #sg.LOOK_AND_FEEL_TABLE['Reddit']['ACCENT2']
     window = sg.Window(window_title, layout, enable_close_attempted_event=True)
     # ------- Event Loop ------- #
     while True:
