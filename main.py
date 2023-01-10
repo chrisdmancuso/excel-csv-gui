@@ -16,16 +16,17 @@ def is_valid_path(filepath):
     sg.popup("No file/folder selected!", title="Error", button_justification="center", button_color="red")
     return False
 
-def display_file(file_path, sheet_name):
+def display_file(file_path):
     try:
         if Path(file_path).suffix == ".xlsx":
+            sheet_name = choose_sheet_name(pd.ExcelFile(file_path).sheet_names)
             df = pd.read_excel(file_path, sheet_name)
         else:
             df = pd.read_csv(file_path, index_col=False)
         filename = Path(file_path).name
         sg.popup_scrolled(df.dtypes, "=" * 50, df, title=filename)
     except:
-        sg.popup("Error parsing file. Check file delimiters", title="Error", button_justification="center", button_color="red")
+        sg.popup("Error parsing file", title="Error", button_justification="center", button_color="red")
 
 def file_exists(file_folder, file_path):
     return Path(f'{file_folder}\{file_path}').is_file()
@@ -49,28 +50,57 @@ def replace_file(file_path, file_type):
     window.close()
     return result
 
+# ------- Choose Sheet ------- #
+def choose_sheet_name(sheet_name):
+    sheet_name_combo = '|'.join(sheet_name)
+    layout = [
+        [sg.Text("Sheet:"), sg.Combo(sheet_name_combo.split("|"), default_value=sheet_name[0], key="-SHEET-", readonly=True, expand_x=True)],
+        [sg.Button("Yes", key="-YES-", s=14, expand_x=True, button_color="tomato"), sg.Button("Cancel", key="-CANCEL-", s=14, expand_x=True)],
+        ]
+    window = sg.Window("Choose a Sheet", layout, use_custom_titlebar=True, modal=True)
+    while True:
+        event, values = window.read()
+        if event == sg.WINDOW_CLOSED or event == "-CANCEL-":
+            sheet_name = "-CANCELLED-"
+            break
+        if event == "-YES-":
+            sheet_name = values["-SHEET-"]
+            break
+    window.close()
+    return sheet_name
+
 # ------- Convert File ------- #
-def convert_file(file_path, output_folder, sheet_name, separator, decimal, filetype, filename):
+def convert_file(file_path, output_folder, separator, decimal, filetype, filename):
     result = True
-    if filename == "":
-        filename = Path(file_path).stem
-    if filetype == 'xlsx':
-        if file_exists(output_folder, filename + '.csv'):
-            result = replace_file(filename, '.csv')
-        if result == True:
-            df = pd.read_excel(file_path, sheet_name)
-            outputfile = Path(output_folder) / f"{filename}.csv"
-            df.to_csv(outputfile, sep=separator, decimal=decimal, index=False)
-    if filetype == '.csv':
-        if file_exists(output_folder, filename + '.xlsx'):
-            result = replace_file(filename, '.xlsx')
-        if result == True:
-            delimiter = find_delimiter(file_path)
-            df = pd.read_csv(file_path, sep=delimiter, index_col=0)
-            outputfile = Path(output_folder) / f"{filename}.xlsx"
-            df.to_excel(outputfile)
-    if result: 
-        sg.popup("Successfully Converted File!", button_justification="center", title="Success!")
+    try:
+        if filename == "":
+            filename = Path(file_path).stem
+        if filetype == 'xlsx':
+            x1 = pd.ExcelFile(file_path)
+            if file_exists(output_folder, filename + '.csv'):
+                result = replace_file(filename, '.csv')
+            if result == True:
+                if len(x1.sheet_names) != 1:
+                    sheet_name = choose_sheet_name(x1.sheet_names)
+                if len(x1.sheet_names) == 1:
+                    sheet_name = x1.sheet_names[0]
+                if sheet_name == "-CANCELLED-":
+                    int(sheet_name)
+                df = pd.read_excel(file_path, sheet_name)
+                outputfile = Path(output_folder) / f"{filename}.csv"
+                df.to_csv(outputfile, sep=separator, decimal=decimal, index=False)
+        if filetype == '.csv':
+            if file_exists(output_folder, filename + '.xlsx'):
+                result = replace_file(filename, '.xlsx')
+            if result == True:
+                delimiter = find_delimiter(file_path)
+                df = pd.read_csv(file_path, sep=delimiter, index_col=0)
+                outputfile = Path(output_folder) / f"{filename}.xlsx"
+                df.to_excel(outputfile)
+        if result: 
+            sg.popup("Successfully Converted File!", button_justification="center", title="Success!")
+    except:
+        sg.popup("Conversion Cancelled.", button_justification="center", title="Cancelled")
 
 # ------- Change Theme ------- #   
 def change_theme(settings):
@@ -128,7 +158,7 @@ def about_page():
         [sg.HSep()],
         [sg.Text("Source Code: github/chrisdmancuso", font=10, auto_size_text=True, justification="center", expand_x=True)],
         [sg.Text("Authored by Chris Mancuso, 2023", font=8, auto_size_text=True, justification="center", expand_x=True)],
-        [sg.Text("Version 1.01", font=8, auto_size_text=True, justification="center", expand_x=True)],
+        [sg.Text("Version 1.02", font=8, auto_size_text=True, justification="center", expand_x=True)],
         [sg.Text("Free to use", font=6, auto_size_text=True, justification="center", expand_x=True)],
         [sg.Button("OK", expand_x=True, key="-OK-")],
         [sg.HSep()],
@@ -239,15 +269,13 @@ def main_window():
         if event == "Display File":
             if is_valid_path(values["-IN-"]):
                 display_file(
-                    file_path=values["-IN-"],
-                    sheet_name=EXCEL["sheet_name"])
+                    file_path=values["-IN-"])
         # --- Convert File --- #
         if event == "Convert File":
             if is_valid_path(values["-IN-"]) and is_valid_path(values["-OUT-"]):
                 convert_file(
                     file_path=values["-IN-"],
                     output_folder=values["-OUT-"],
-                    sheet_name=EXCEL["sheet_name"],
                     separator=CSV["separator"],
                     decimal=CSV["decimal_default"],
                     filetype=values["-IN-"][len(values["-IN-"]) - 4:],
