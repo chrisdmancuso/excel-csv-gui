@@ -1,9 +1,21 @@
-# Excel And CSV File Converter GUI
+# Excel-CSV-GUI File Converter
 ### About
 ##
 A standalone GUI app created using Python to convert Excel files to CSV and vice-versa. Created using [PySimpleGUI](https://www.pysimplegui.org/en/latest/), [Pandas](https://pandas.pydata.org/), [openpyxl](https://openpyxl.readthedocs.io/en/stable/), and [psgcompiler](https://pypi.org/project/psgcompiler/).
 
 ![GUI_example](https://user-images.githubusercontent.com/31321037/211216398-db64c69d-bdbd-4ac7-b56f-9a9a07bb0f1f.PNG)
+
+##
+### Usage
+##
+
+1) Select a .xlsx or .csv file to convert.
+2) Select the output folder for your new file
+3) Optional: Give your new file a name. Defaults to the name of the converting file.
+4) Convert!
+
+![GUI_example_steps](https://user-images.githubusercontent.com/31321037/211217130-2606c9bb-6e78-4b4d-9ae9-9ad54b7c62da.png)
+
 
 ##
 ### Compile
@@ -13,7 +25,7 @@ Download and launch the [.exe file](https://github.com/chrisdmancuso/excel-csv-g
 
 Optionally: follow along to compile from source code, or use your preferred py to exe method.
 
-0) Download [main.py](https://github.com/chrisdmancuso/excel-csv-gui/blob/main/main.py) and [config.ini](https://github.com/chrisdmancuso/excel-csv-gui/blob/main/config.ini) to your local machine
+0) Download [main.py](https://github.com/chrisdmancuso/excel-csv-gui/blob/main/main.py) , [sg_main.py](https://github.com/chrisdmancuso/excel-csv-gui/blob/main/sg_main.py), and [config.ini](https://github.com/chrisdmancuso/excel-csv-gui/blob/main/config.ini) to a folder on your local machine.
 
 1) [Ensure pip is installed](https://docs.python.org/3/library/ensurepip.html)
 2) Using Command Line, create a Python virtual environment
@@ -37,6 +49,15 @@ If successfully activated, the virtual environment will appear in parentheses ne
 pip install pandas openpyxl PySimpleGUI psgcompiler
 ```
 
+*NOTE*
+```
+pip install PySimpleGUI
+```
+does **NOT** install the latest version of PySimpleGUI, as of the time of this writing. Excel-CSV-GUI takes advantage of feature present in the latest version and will crash if ran on incorrect versions. To install the latest version of PySimpleGUI, first install PySimpleGUI with pip, then run [sg_main](https://github.com/chrisdmancuso/excel-csv-gui/blob/main/sg_main.py) within the virtual environment to update.
+```
+python sg_main.py
+```
+
 5) Run psgcompiler within the virtual environment
 
 ![psg_env](https://user-images.githubusercontent.com/31321037/211218070-0c798f42-63ae-4cce-a999-b9392a044fee.PNG)
@@ -50,13 +71,3 @@ pip install pandas openpyxl PySimpleGUI psgcompiler
 ![deactivate_env](https://user-images.githubusercontent.com/31321037/211218110-ffc135d1-7397-4292-9852-450a7cedbb53.PNG)
 
 8) Launch your new .exe!
-##
-### Usage
-##
-
-1) Select a .xlsx or .csv file to convert.
-2) Select the output folder for your new file
-3) Optional: Give your new file a name. Defaults to the name of the converting file.
-4) Convert!
-
-![GUI_example_steps](https://user-images.githubusercontent.com/31321037/211217130-2606c9bb-6e78-4b4d-9ae9-9ad54b7c62da.png)
