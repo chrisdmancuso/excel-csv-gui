@@ -26,7 +26,8 @@ def display_file(file_path):
         filename = Path(file_path).name
         sg.popup_scrolled(df.dtypes, "=" * 50, df, title=filename)
     except:
-        sg.popup("Error parsing file", title="Error", button_justification="center", button_color="red")
+        if sheet_name != "-CANCELLED-":
+            sg.popup("Error parsing file", title="Error", button_justification="center", button_color="red")
 
 def file_exists(file_folder, file_path):
     return Path(f'{file_folder}\{file_path}').is_file()
