@@ -160,7 +160,7 @@ def about_page():
         [sg.HSep()],
         [sg.Text("Source Code: github/chrisdmancuso", font=10, auto_size_text=True, justification="center", expand_x=True)],
         [sg.Text("Authored by Chris Mancuso, 2023", font=8, auto_size_text=True, justification="center", expand_x=True)],
-        [sg.Text("Version 1.02", font=8, auto_size_text=True, justification="center", expand_x=True)],
+        [sg.Text("Version 1.04", font=8, auto_size_text=True, justification="center", expand_x=True)],
         [sg.Text("Free to use", font=6, auto_size_text=True, justification="center", expand_x=True)],
         [sg.Button("OK", expand_x=True, key="-OK-")],
         [sg.HSep()],
