@@ -110,7 +110,8 @@ def change_theme(settings):
     layout = [
         [sg.HSep()],
         [sg.Text(f'Current theme: {GUI["theme"]}')],
-        [sg.Combo(sg.theme_list(), key="-THEME-"), sg.OK(button_color="tomato"), sg.Cancel()],
+        [sg.Combo(sg.theme_list(), s=33, key="-THEME-")],
+        [sg.Button("OK", key="-OK-", s=16, button_color="tomato"), sg.Cancel(s=16)],
         [sg.HSep()],
         ]
     window = sg.Window("Theme", layout, modal=True, use_custom_titlebar=True)
@@ -119,7 +120,7 @@ def change_theme(settings):
         event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == "Cancel":
             break
-        if event == "OK":
+        if event == "-OK-":
             if len(values["-THEME-"]) != 0:
                 GUI["theme"] = values["-THEME-"]
                 sg.popup("Theme Changed! Restart required to take effect.", button_justification="center", title="Success!", modal=True)
